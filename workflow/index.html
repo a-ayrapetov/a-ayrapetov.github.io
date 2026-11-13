@@ -67,6 +67,28 @@
   .tag { font-size: 0.85em; color: var(--muted); }
   footer { margin-top: 2rem; color: var(--muted); }
   footer p { margin: 0.3rem 0; max-width: 80ch; }
+
+  /* CHANGED 2026-11-13: fit the whole page on one screen (no scrolling) on laptop and desktop screens */
+  @media (min-width: 900px) {
+    html { font-size: clamp(12px, 0.3vw + 9px, 15px); }
+    body { height: 100vh; overflow: hidden; }
+    .page { height: 100vh; display: flex; flex-direction: column; padding: 0.9rem 2rem 0.8rem; }
+    header h1 { font-size: 1.7rem; margin: 0 0 0.25rem; }
+    header p { font-size: 0.95rem; max-width: 110ch; }
+    .controls { margin: 0.6rem 0 0.2rem; gap: 0.5rem 1.2rem; }
+    .seg { padding: 0.2rem 0.65rem; }
+    .walk button { padding: 0.25rem 0.8rem; }
+    .map { margin: 0.2rem 0 0; flex: 0 0 auto; }
+    .map svg { max-height: 30vh; }
+    .panel { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-top: 0.5rem; padding: 0.8rem 1.6rem 1rem; }
+    .panel h2 { font-size: 1.35rem; }
+    .panel .why { margin: 0.1rem 0 0.7rem; font-size: 0.98rem; }
+    .cols { gap: 0.6rem 1.6rem; }
+    .gate { margin-top: 0.7rem; padding: 0.5rem 0.9rem; }
+    .gate .q { font-size: 1rem; }
+    .example { margin-top: 0.7rem; padding: 0.5rem 0.9rem; }
+    footer { display: none; }
+  }
 </style>
 </head>
 <body>
