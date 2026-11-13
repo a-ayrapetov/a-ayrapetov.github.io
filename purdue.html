@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT to OT, level by level | Arkadiy Ayrapetov</title>
+<style>
+  body { margin: 0; font: 16px/1.5 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; background: #f6f8fa; color: #1f2328; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 20px 48px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  p.lead { margin: 0 0 24px; color: #57606a; }
+  details { background: #fff; border: 1px solid #d0d7de; border-left: 8px solid var(--c); border-radius: 6px; margin: 0 0 6px; }
+  summary { cursor: pointer; padding: 12px 16px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+  summary::-webkit-details-marker { display: none; }
+  summary span { font-weight: 400; color: #57606a; }
+  details[open] summary { border-bottom: 1px solid #d0d7de; }
+  .body { padding: 10px 16px 14px; }
+  .body ul { margin: 6px 0; padding-left: 20px; }
+  .conduit { margin: 0 0 6px 24px; padding: 2px 10px; font-size: 14px; color: #57606a; border-left: 2px dashed #8c959f; }
+  a { color: #0969da; }
+  summary:focus-visible { outline: 2px solid #0969da; }
+  footer { margin-top: 28px; font-size: 14px; color: #57606a; }
+</style>
+</head>
+<body>
+<main>
+<h1>IT to OT, level by level</h1>
+<p class="lead">The Purdue model from the enterprise down to the field. Open a level to see what I do there and the tools I publish for it.</p>
+
+<details style="--c:#1f6feb"><summary>Levels 4 and 5: Enterprise IT <span>identity, campus, cloud</span></summary><div class="body">
+<ul><li>Cisco ISE design, upgrades and rescue; 802.1X EAP-TLS, TrustSec, PKI</li><li>SD-Access and Catalyst Center; Secure Firewall; SD-WAN and BGP to the cloud</li></ul>
+Tools: <a href="https://github.com/a-ayrapetov/ise-endpoint-explain">ise-endpoint-explain</a>, <a href="https://github.com/a-ayrapetov/ise-health-audit">ise-health-audit</a>, <a href="https://github.com/a-ayrapetov/cisco-interface-health">cisco-interface-health</a>
+</div></details>
+<div class="conduit">Conduit: firewall and jump host. Nothing from IT reaches operations directly.</div>
+
+<details style="--c:#6e40c9"><summary>Level 3.5: OT DMZ <span>the only way between IT and OT</span></summary><div class="body">
+<ul><li>Jump hosts, patch relay, historian replica</li><li>Vendor remote access through a jump host with MFA</li><li>Every conduit modelled and checked against real traffic</li></ul>
+Tools: <a href="https://github.com/a-ayrapetov/ot-zone-conduit-check">ot-zone-conduit-check</a>
+</div></details>
+<div class="conduit">Conduit: firewall and monitoring, only the services the conduit allows.</div>
+
+<details style="--c:#1a7f37"><summary>Level 3: Operations <span>control center</span></summary><div class="body">
+<ul><li>Security groups across train control, SCADA, fire alarm, elevators, fare collection and CCTV, mapped to IEC 62443</li><li>NDR sensors and flow analytics, tuned until the alarms mean something</li></ul>
+Tools: <a href="https://github.com/a-ayrapetov/ndr-coverage-map">ndr-coverage-map</a>, <a href="https://github.com/a-ayrapetov/cisco-config-drift">cisco-config-drift</a>
+</div></details>
+<div class="conduit">Security groups and closed-mode MAB between operations and the stations.</div>
+
+<details style="--c:#1a7f37"><summary>Level 2: Supervisory <span>stations and HMIs</span></summary><div class="body">
+<ul><li>Closed-mode MAB for devices that cannot run 802.1X, one site at a time</li><li>AAA hardening on thousands of switches, checked before it can lock anyone out</li><li>Discovery of devices nobody had on a list</li></ul>
+Tools: <a href="https://github.com/a-ayrapetov/ot-asset-inventory">ot-asset-inventory</a>, <a href="https://github.com/a-ayrapetov/aaa-lockout-check">aaa-lockout-check</a>, <a href="https://github.com/a-ayrapetov/ios-hardening-audit">ios-hardening-audit</a>
+</div></details>
+<div class="conduit">One way out through a data diode. Nothing comes back in.</div>
+
+<details style="--c:#cf222e"><summary>Levels 1 and 0: Control and field <span>train control, PLCs, signals</span></summary><div class="body">
+<ul><li>Safety systems stay agentless</li><li>Visibility through passive TAPs cut in during one overnight window, no service disruption</li></ul>
+Tools: <a href="https://github.com/a-ayrapetov/ndr-coverage-map">ndr-coverage-map</a>
+</div></details>
+
+<footer><a href="https://github.com/a-ayrapetov">github.com/a-ayrapetov</a> · <a href="/">field notes</a> · arkadiy@ayrapetov.co</footer>
+</main>
+</body>
+</html>
