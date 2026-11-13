@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How the work moves | Arkadiy Ayrapetov</title>
+<meta name="description" content="Six steps from requirement to a defended end state, with a gate after each step. Click a step or walk the line with the arrow keys.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3f5f7; --panel: #ffffff; --ink: #18222c; --muted: #56636f; --rule: #d3dbe2;
+    --route: #2f5d4c; --go: #1a7f37; --stop: #cf222e; --hold: #9a6700; --focus: #0969da;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #0e161c; --panel: #152029; --ink: #e6edf3; --muted: #97a6b2; --rule: #26343f;
+      --route: #5fae8e; --go: #3fb950; --stop: #f85149; --hold: #d29922; --focus: #58a6ff; }
+  }
+  * { box-sizing: border-box; }
+  html { font-size: clamp(16px, 0.55vw + 11px, 20px); }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: Overpass, "Segoe UI", system-ui, sans-serif; line-height: 1.5; }
+  a { color: var(--route); text-underline-offset: 0.18em; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
+  .page { padding: 2.2rem clamp(1rem, 3vw, 3.5rem) 3rem; }
+  header h1 { font-weight: 800; font-size: clamp(2rem, 3.2vw, 3.4rem); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 0.6rem; }
+  header p { margin: 0; max-width: 62ch; color: var(--muted); font-size: 1.1rem; }
+  .controls { display: flex; flex-wrap: wrap; gap: 1rem 2rem; align-items: center; margin: 1.8rem 0 0.6rem; }
+  .controls fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+  .controls legend { float: left; margin-right: 0.6rem; color: var(--muted); font-weight: 600; }
+  .seg { appearance: none; font: inherit; font-weight: 600; border: 2px solid var(--rule); background: var(--panel); color: var(--ink); padding: 0.35rem 0.8rem; border-radius: 999px; cursor: pointer; }
+  .seg[aria-pressed="true"] { border-color: var(--route); background: var(--route); color: var(--paper); }
+  .walk { display: flex; gap: 0.5rem; margin-left: auto; }
+  .walk button { font: inherit; font-weight: 600; padding: 0.45rem 1rem; border-radius: 6px; border: 2px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; }
+  .walk button:disabled { opacity: 0.35; cursor: default; }
+  .map { width: 100%; margin: 0.8rem 0 0; }
+  .map svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .station { cursor: pointer; }
+  .station circle.dot { fill: var(--panel); stroke: var(--route); stroke-width: 6; transition: fill 0.2s; }
+  .station.on circle.dot { fill: var(--route); }
+  .station text.num { font-weight: 800; fill: var(--route); }
+  .station.on text.num { fill: var(--paper); }
+  .station text.name { font-weight: 800; fill: var(--ink); }
+  .station text.sub { fill: var(--muted); }
+  .station:focus { outline: none; }
+  .station:focus-visible circle.ring { stroke: var(--focus); stroke-width: 3; }
+  .signal text { fill: var(--muted); }
+  .back path { fill: none; stroke: var(--stop); stroke-width: 2; stroke-dasharray: 6 5; }
+  .back text { fill: var(--stop); font-weight: 600; }
+  #train { transition: transform 0.45s cubic-bezier(.4,.1,.2,1); }
+  @media (prefers-reduced-motion: reduce) { #train, .station circle.dot { transition: none; } }
+  .panel { margin-top: 1.4rem; background: var(--panel); border-top: 6px solid var(--route); border-radius: 0 0 10px 10px; padding: 1.6rem clamp(1rem, 2.5vw, 2.4rem) 2rem; }
+  .panel h2 { margin: 0; font-size: clamp(1.6rem, 2.2vw, 2.4rem); font-weight: 800; letter-spacing: -0.01em; }
+  .panel .why { margin: 0.3rem 0 1.4rem; font-size: 1.15rem; color: var(--muted); max-width: 70ch; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1.4rem 2.2rem; }
+  .cols h3 { margin: 0 0 0.4rem; font-size: 1rem; font-weight: 800; color: var(--route); }
+  .cols ol, .cols ul { margin: 0; padding-left: 1.2rem; }
+  .cols li { margin: 0.25rem 0; }
+  .gate { margin-top: 1.6rem; display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 1.2rem; align-items: start; padding: 1rem 1.2rem; border: 2px solid var(--rule); border-radius: 8px; }
+  .gate .lamps { grid-row: span 3; display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--ink); border-radius: 14px; }
+  .gate .lamps i { width: 16px; height: 16px; border-radius: 50%; display: block; }
+  .gate .q { font-weight: 800; font-size: 1.15rem; }
+  .gate .yes { color: var(--go); font-weight: 600; } .gate .no { color: var(--stop); font-weight: 600; }
+  .example { margin-top: 1.4rem; padding: 1rem 1.2rem; border-left: 6px solid var(--hold); background: color-mix(in srgb, var(--hold) 9%, transparent); border-radius: 0 8px 8px 0; }
+  .example h3 { margin: 0 0 0.3rem; font-size: 1rem; font-weight: 800; color: var(--hold); }
+  .example p { margin: 0; max-width: 80ch; }
+  .tag { font-size: 0.85em; color: var(--muted); }
+  footer { margin-top: 2rem; color: var(--muted); }
+  footer p { margin: 0.3rem 0; max-width: 80ch; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>How the work moves, step by step</h1>
+    <p>Six steps from a requirement to a defended end state. Every step ends at a signal, and the work goes on only when it turns green; a red sends it back to the step named on the dashed line. Click a step, or walk the line with the arrow keys.</p>
+  </header>
+
+  <div class="controls">
+    <fieldset id="examples">
+      <legend>Worked example</legend>
+      <button class="seg" type="button" data-ex="" aria-pressed="true">None</button>
+      <button class="seg" type="button" data-ex="tacacs" aria-pressed="false">Moving switch logins to ISE TACACS+</button>
+      <button class="seg" type="button" data-ex="mab" aria-pressed="false">Closing access ports with closed-mode MAB</button>
+    </fieldset>
+    <div class="walk">
+      <button type="button" id="prev">Previous step</button>
+      <button type="button" id="next">Next step</button>
+    </div>
+  </div>
+
+  <div class="map" id="map" aria-label="The six steps as a line, with a signal after each step"></div>
+
+  <section class="panel" id="panel" aria-live="polite"></section>
+
+  <footer>
+    <p>The tools named here are the public, generic versions of the work: read-only by default, no stored credentials, sample data on documentation addresses only. Tools marked "being built" are not published yet.</p>
+    <p><a href="https://github.com/a-ayrapetov">Profile and tools on GitHub</a> &nbsp; <a href="/">Field notes</a></p>
+  </footer>
+</div>
+
+<script>
+const GH = 'https://github.com/a-ayrapetov/';
+const PB = GH + 'a-ayrapetov/blob/main/playbooks/';
+const tool = (n) => ({ name: n, href: GH + n });
+const soon = (n) => ({ name: n, soon: true });
+const play = (name, file) => ({ name, href: PB + file, playbook: true });
+
+const STEPS = [
+  { name: 'Requirement', sub: 'the ask becomes a test',
+    why: 'Turn the ask into a control that can pass or fail, so every later step has something to prove against.',
+    doing: ['Take the driver: a regulatory directive, an audit finding, an incident or a client request.', 'Write it as a control with a pass condition and a scope: zones, sites, device classes.', 'Agree the end state and who signs it off.'],
+    proof: ['One requirement line per control, with its scope, its pass condition and the source it traces to.'],
+    tools: [soon('requirements-trace'), play('Two sources and a proof', 'two-sources-and-a-proof.md')],
+    gate: null,
+    ex: { tacacs: 'Every switch login is authenticated and authorized through ISE TACACS+, and a local login still works when ISE cannot be reached.',
+          mab: 'Every access port admits only known devices; devices that cannot do 802.1X get in by MAC address through ISE.' } },
+  { name: 'Assess', sub: 'what is there, what is missing',
+    why: 'Know every device and every gap before designing anything, without sending the network a single packet.',
+    doing: ['Read ARP, MAC, interface and CDP/LLDP output offline to build the endpoint list per switch port.', 'Baseline every running-config and audit it against the hardening standard.', 'List the gaps per zone against the requirement.'],
+    proof: ['Endpoints per port, with hidden switches and MACs that have no IP flagged.', 'Hardening gaps per device with severity, the evidence line and the exact fix.', 'A config baseline to measure every later change against.'],
+    tools: [tool('ot-asset-inventory'), tool('ios-hardening-audit'), tool('cisco-config-drift')],
+    gate: { q: 'Are the assets and the gaps known?', short: 'Assets and gaps known?', yes: 'Go to step 3, Design.', no: 'Stay in step 2 and collect what is missing.', back: 1, label: 'keep assessing', decides: 'Every zone in scope has an endpoint list and a gap list.' },
+    ex: { tacacs: 'Configs pulled from every switch; the hardening audit lists the AAA and management-plane gaps per device.',
+          mab: 'The inventory builds the endpoint list per port from offline show output; unknown and IP-less MACs go to their owners to be named.' } },
+  { name: 'Design', sub: 'checked against real traffic',
+    why: 'Prove the design against traffic that is really on the wire before a single port changes.',
+    doing: ['Draw zones and conduits: who must talk to whom, and over what.', 'Write the access policy: 802.1X where devices can, closed-mode MAB where they cannot, TrustSec groups and contracts.', 'Replay the design against observed flows and change it until no legitimate flow would be blocked.'],
+    proof: ['The zone and conduit model.', 'Every flow the design would block, each one explained.', 'The rollout order, site by site.'],
+    tools: [soon('ot-zone-conduit-check'), play('Closed-mode MAB, one site at a time', 'closed-mode-mab-site-rollout.md')],
+    gate: { q: 'Does the design hold against real traffic?', short: 'Holds on real traffic?', yes: 'Go to step 4, Prepare the change.', no: 'Redesign in step 3.', back: 2, label: 'redesign', decides: 'Replaying observed flows breaks nothing that is meant to work.' },
+    ex: { tacacs: 'Device admin policy in ISE: who gets which command set, and the fallback order per platform.',
+          mab: 'MAC lists and authorization profiles per device class, and the order of sites, checked against the flows seen on each site.' } },
+  { name: 'Prepare the change', sub: 'the way back is ready first',
+    why: 'Nothing goes into production until the rollback is written, the lockout risks are cleared and the platform is healthy.',
+    doing: ['Write the procedure: pre-checks, the exact commands, the verification and the rollback.', 'Check the new configs for every way they could lock an engineer out.', 'Check ISE health and certificate expiry before the window.', 'Put the change into a script that stops on the first failed proof.'],
+    proof: ['Pre-check output saved to the change record.', 'A clean lockout report and a clean health report.', 'The rollback, written and ready to run.'],
+    tools: [tool('aaa-lockout-check'), tool('ise-health-audit'), play('Production change by script', 'gated-production-change.md'), play('The script contract', 'script-contract.md')],
+    gate: { q: 'Do the lockout and rollback checks pass?', short: 'Lockout and rollback clear?', yes: 'Go to step 5, Deliver.', no: 'Hold the change, fix it and check again in step 4.', back: 3, label: 'hold, fix, check again', decides: 'No lockout finding is open, health is clean and the rollback is in hand.' },
+    ex: { tacacs: 'The lockout check clears every shape that locks you out: no working fallback, console authorization, undefined method lists, a dead source interface, a management VRF mismatch. ISE health is clean before the window.',
+          mab: 'A procedure per site with its port list, the return to open mode as the rollback, and ISE health checked before the window.' } },
+  { name: 'Deliver', sub: 'one batch at a time, each proven',
+    why: 'Change a small batch, prove it, and only then touch the next one.',
+    doing: ['Run the change in the window, one batch at a time: a site, or a set of ports or switches.', 'After each batch, prove it: sessions authorize as designed, ports are healthy, nothing else changed.', 'A failed proof rolls that batch back; the next batch waits.'],
+    proof: ['A before and after diff per device.', 'The verification lines in the change record.'],
+    tools: [tool('ise-endpoint-explain'), tool('cisco-interface-health'), tool('cisco-config-drift')],
+    gate: { q: 'Did every proof pass?', short: 'Every proof passed?', yes: 'Go to step 6, Operate and defend.', no: 'Roll the batch back and return to step 4.', back: 3, label: 'roll back the batch', decides: 'Every batch has its verification lines, and none failed.' },
+    ex: { tacacs: 'A batch of switches at a time; after each, a test login through ISE and a login on the local fallback are both proven before the next batch.',
+          mab: 'One site at a time; the endpoint explainer shows why any device failed and where it landed, and the interface check confirms the ports.' } },
+  { name: 'Operate and defend', sub: 'keep it true after handover',
+    why: 'The work stays true after handover, and anything that drifts or alarms becomes the next requirement.',
+    doing: ['Check every device against the approved state and report anything changed outside change control.', 'Watch ISE health and certificate expiry.', 'Tune detection by classifying the hosts behind the alarms instead of switching rules off.'],
+    proof: ['Drift reports, health reports and the alarm trend over time.'],
+    tools: [tool('cisco-config-drift'), tool('ise-health-audit'), tool('ise-endpoint-explain'), soon('ndr-coverage-map'), play('NDR alarm noise reduction loop', 'ndr-alarm-noise-reduction-loop.md')],
+    gate: { q: 'Is there a finding from health, drift or detection?', short: 'Any finding?', yes: 'It becomes a new requirement: back to step 1.', no: 'In service. The checks keep running.', back: 0, label: 'new requirement, back to step 1', decides: 'The scheduled drift, health and detection checks.', invert: true },
+    ex: { tacacs: 'The drift check keeps the AAA configuration at the approved state on every switch.',
+          mab: 'New and moved devices show up on the next inventory run, and drift checks watch the port configurations.' } },
+];
+const EX_NAME = { tacacs: 'Moving switch logins to ISE TACACS+', mab: 'Closing access ports with closed-mode MAB' };
+
+let cur = Math.max(0, Math.min(STEPS.length - 1, (Number((location.hash.match(/step-(\d)/) || [])[1]) || 1) - 1));
+let ex = '';
+const NS = 'http://www.w3.org/2000/svg';
+const el = (n, a = {}, parent) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (parent) parent.appendChild(e); return e; };
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+function drawMap() {
+  const box = document.getElementById('map'), w = Math.max(320, box.clientWidth), vertical = w < 1000;
+  box.textContent = '';
+  const n = STEPS.length, r = vertical ? 18 : 24, fs = vertical ? 15 : Math.round(Math.min(24, Math.max(16, w / 105))); // text grows with the screen
+  const svg = el('svg', { role: 'group' }, box);
+  const pos = [];
+  if (!vertical) {
+    // stations on one line across the full width; signals under the line between stations; red dashed returns below
+    const left = 90, endX = w - 50, right = endX - 260, gap = (right - left) / (n - 1), tight = gap < 250, y = 40 + fs * (tight ? 4.2 : 3.6);
+    for (let i = 0; i < n; i++) pos.push({ x: left + i * gap, y });
+    drawMap.tight = tight;
+    el('line', { x1: left, y1: y, x2: endX, y2: y, stroke: css('--route'), 'stroke-width': 10, 'stroke-linecap': 'round' }, svg);
+    el('circle', { cx: endX, cy: y, r: 11, fill: css('--go') }, svg);
+    el('text', { x: endX + 12, y: y + fs + 26, 'text-anchor': 'end', 'font-size': fs + 2, fill: css('--go'), 'font-weight': 800 }, svg).textContent = 'In service';
+    let bottom = 0;
+    STEPS.forEach((s, i) => {
+      if (!s.gate) return;
+      const gx = i < n - 1 ? (pos[i].x + pos[i + 1].x) / 2 : (pos[i].x + endX) / 2;
+      drawSignal(svg, gx, y, i, fs, false);
+      const yN = y + 60 + fs + 1.3 * fs, tx = pos[s.gate.back].x, y0 = yN + 0.7 * fs, y1 = y + r + 6, depth = y0 + (s.gate.back === 0 ? 170 : 70 + (i - s.gate.back) * 60);
+      const last = i === n - 1;
+      el('text', { x: last ? w - 6 : gx, y: yN, 'text-anchor': last ? 'end' : 'middle', 'font-size': fs - 3, fill: css('--stop'), 'font-weight': 600 }, svg).textContent = (s.gate.invert ? 'yes: ' : 'no: ') + s.gate.label;
+      const back = el('g', { class: 'back' }, svg);
+      el('path', { d: `M ${gx} ${y0} C ${gx} ${depth}, ${tx} ${depth}, ${tx} ${y1 + 10}` }, back);
+      el('polygon', { points: `${tx - 7},${y1 + 12} ${tx + 7},${y1 + 12} ${tx},${y1}`, fill: css('--stop') }, back);
+      const low = 0.125 * y0 + 0.75 * depth + 0.125 * (y1 + 10);
+      bottom = Math.max(bottom, low + 16);
+    });
+    svg.setAttribute('viewBox', `0 0 ${w} ${Math.ceil(bottom + 10)}`);
+  } else {
+    drawMap.tight = false;
+    // narrow screens: the line runs down the left; each gate's red path is spelled out in the panel
+    const x = 34, top = 40, gap = 120;
+    for (let i = 0; i < n; i++) pos.push({ x, y: top + i * gap });
+    svg.setAttribute('viewBox', `0 0 ${w} ${top + n * gap + 30}`);
+    el('line', { x1: x, y1: top, x2: x, y2: top + n * gap, stroke: css('--route'), 'stroke-width': 8, 'stroke-linecap': 'round' }, svg);
+    el('circle', { cx: x, cy: top + n * gap, r: 9, fill: css('--go') }, svg);
+    el('text', { x: x + 40, y: top + n * gap + 6, 'font-size': fs + 1, fill: css('--go'), 'font-weight': 800 }, svg).textContent = 'In service';
+    STEPS.forEach((s, i) => { if (s.gate) drawSignal(svg, x, pos[i].y + gap / 2 + 4, i, fs, true); });
+  }
+  const train = el('g', { id: 'train', 'aria-hidden': 'true' }, svg);
+  el('circle', { cx: 0, cy: 0, r: r + 12, fill: 'none', stroke: css('--hold'), 'stroke-width': 4 }, train);
+  STEPS.forEach((s, i) => {
+    const g = el('g', { class: 'station' + (i === cur ? ' on' : ''), tabindex: 0, role: 'button', 'aria-label': `Step ${i + 1}: ${s.name}`, 'data-i': i }, svg);
+    el('circle', { class: 'ring', cx: pos[i].x, cy: pos[i].y, r: r + 6, fill: 'transparent', stroke: 'transparent' }, g);
+    el('circle', { class: 'dot', cx: pos[i].x, cy: pos[i].y, r }, g);
+    el('text', { class: 'num', x: pos[i].x, y: pos[i].y + fs * 0.36, 'text-anchor': 'middle', 'font-size': fs + 2 }, g).textContent = i + 1;
+    const tx = vertical ? pos[i].x + 40 : pos[i].x, ta = vertical ? 'start' : 'middle';
+    const nm = el('text', { class: 'name', x: tx, y: vertical ? pos[i].y + 2 : drawMap.tight ? pos[i].y - r - 16 - 1.1 * (fs + 3) : pos[i].y - 2.2 * fs - 14, 'text-anchor': ta, 'font-size': fs + 3 }, g);
+    const words = s.name.split(' '), cut = Math.ceil(words.length / 2);
+    if (!vertical && drawMap.tight && words.length > 1) [words.slice(0, cut).join(' '), words.slice(cut).join(' ')].forEach((line, k) => { const t = el('tspan', { x: tx, dy: k ? '1.1em' : 0 }, nm); t.textContent = line; });
+    else nm.textContent = s.name;
+    if (vertical || !drawMap.tight) el('text', { class: 'sub', x: tx, y: vertical ? pos[i].y + 24 : pos[i].y - fs - 18, 'text-anchor': ta, 'font-size': fs - 1 }, g).textContent = s.sub;
+    g.addEventListener('click', () => go(i));
+    g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(i); } });
+  });
+  drawMap.pos = pos;
+  moveTrain();
+}
+function drawSignal(svg, x, y, i, fs, vertical) {
+  // a two-lamp signal: green on top, red below; under the line when horizontal, beside it when vertical
+  const g = el('g', { class: 'signal', transform: `translate(${x} ${y})` }, svg);
+  const hx = vertical ? 30 : -11, hy = vertical ? -20 : 16;
+  el('rect', { x: vertical ? 4 : -2, y: vertical ? -2 : 5, width: vertical ? 26 : 4, height: vertical ? 4 : 11, fill: css('--muted') }, g);
+  el('rect', { x: hx, y: hy, width: 22, height: 40, rx: 10, fill: css('--ink') }, g);
+  el('circle', { cx: hx + 11, cy: hy + 11, r: 6, fill: css('--go') }, g);
+  el('circle', { cx: hx + 11, cy: hy + 29, r: 6, fill: css('--stop') }, g);
+  el('text', { x: vertical ? hx + 32 : 0, y: vertical ? hy + 25 : hy + 44 + fs, 'text-anchor': vertical ? 'start' : 'middle', 'font-size': fs - 2, 'font-weight': 600 }, g).textContent = STEPS[i].gate.short;
+}
+function moveTrain() {
+  const p = drawMap.pos && drawMap.pos[cur], t = document.getElementById('train');
+  if (p && t) t.setAttribute('transform', `translate(${p.x} ${p.y})`);
+  document.querySelectorAll('.station').forEach((g) => g.classList.toggle('on', Number(g.dataset.i) === cur));
+}
+const link = (t) => t.soon ? `<span>${t.name} <span class="tag">(being built)</span></span>` : `<a href="${t.href}">${t.name}</a>${t.playbook ? ' <span class="tag">(playbook)</span>' : ''}`;
+function renderPanel() {
+  const s = STEPS[cur], p = document.getElementById('panel');
+  const gate = s.gate ? `<div class="gate"><div class="lamps" aria-hidden="true"><i style="background:var(--go)"></i><i style="background:var(--stop)"></i></div>
+      <div class="q">Gate: ${s.gate.q}</div>
+      <div><span class="${s.gate.invert ? 'no' : 'yes'}">Yes:</span> ${s.gate.yes} &nbsp; <span class="${s.gate.invert ? 'yes' : 'no'}">No:</span> ${s.gate.no}</div>
+      <div class="tag">Decided by: ${s.gate.decides}</div></div>`
+    : `<div class="gate"><div class="lamps" aria-hidden="true"><i style="background:var(--go)"></i><i style="background:var(--muted)"></i></div><div class="q">No gate here</div><div>The requirement goes straight into step 2, Assess.</div><div class="tag">Step 6 sends every new finding back to this step.</div></div>`;
+  const exb = ex ? `<div class="example"><h3>On a real job: ${EX_NAME[ex]}</h3><p>${s.ex[ex]}</p></div>` : '';
+  p.innerHTML = `<h2>Step ${cur + 1}: ${s.name}</h2><p class="why">${s.why}</p>
+    <div class="cols">
+      <div><h3>What I do</h3><ol>${s.doing.map((d) => `<li>${d}</li>`).join('')}</ol></div>
+      <div><h3>Proof it leaves behind</h3><ul>${s.proof.map((d) => `<li>${d}</li>`).join('')}</ul></div>
+      <div><h3>Tools and playbooks</h3><ul>${s.tools.map((t) => `<li>${link(t)}</li>`).join('')}</ul></div>
+    </div>${exb}${gate}`;
+  document.getElementById('prev').disabled = cur === 0;
+  document.getElementById('next').disabled = cur === STEPS.length - 1;
+}
+function go(i) {
+  cur = Math.max(0, Math.min(STEPS.length - 1, i));
+  history.replaceState(null, '', '#step-' + (cur + 1));
+  moveTrain(); renderPanel();
+}
+document.getElementById('prev').addEventListener('click', () => go(cur - 1));
+document.getElementById('next').addEventListener('click', () => go(cur + 1));
+document.addEventListener('keydown', (e) => {
+  if (e.target.closest && e.target.closest('input, textarea')) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); go(cur + 1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); go(cur - 1); }
+});
+document.querySelectorAll('#examples .seg').forEach((b) => b.addEventListener('click', () => {
+  ex = b.dataset.ex;
+  document.querySelectorAll('#examples .seg').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  renderPanel();
+}));
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawMap, 120); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', drawMap);
+drawMap(); renderPanel();
+</script>
+</body>
+</html>
