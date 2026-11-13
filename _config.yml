@@ -1,6 +1,18 @@
 title: Arkadiy Ayrapetov
-description: Network and OT security architecture notes. ISE, TrustSec, SD-Access, segmentation, read-only tooling.
+description: >-
+  Cybersecurity Architect. Field notes on network access control, segmentation,
+  OT and ICS security, detection and the read-only tooling I use on client work.
 author: Arkadiy Ayrapetov
+email: arkadiy@ayrapetov.co
 theme: minima
 url: https://a-ayrapetov.github.io
 github_username: a-ayrapetov
+show_excerpts: true
+header_pages:
+  - work.md
+  - tools.md
+  - about.md
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap

@@ -2,7 +2,7 @@
 layout: post
 title: "When TrustSec looks like a routing problem"
 ---
-The ticket said the domain controllers were down. They were not. They answered DNS, Kerberos and LDAP all day. They just would not answer a ping, and every monitoring check, every engineer's first test and half the troubleshooting runbooks start with a ping. Two hours of looking at routing tables later, the cause turned out to be one cell in a TrustSec policy matrix.
+The ticket said the domain controllers were down. They were not. They answered DNS, Kerberos and LDAP all day. They just would not answer a ping, and every monitoring check, everyone's first test and half the troubleshooting runbooks start with a ping. Two hours of looking at routing tables later, the cause turned out to be one cell in a TrustSec policy matrix.
 
 ## How it happens
 
