@@ -129,7 +129,7 @@ const soon = (n) => ({ name: n, soon: true });
 const play = (name, file) => ({ name, href: PB + file, playbook: true });
 
 const STEPS = [
-  { name: 'Requirement', sub: 'the ask becomes a test',
+  { name: 'Orders', sub: 'the ask becomes a test',
     why: 'Turn the ask into a control that can pass or fail, so every later step has something to prove against.',
     doing: ['Take the driver: a regulatory directive, an audit finding, an incident or a client request.', 'Write it as a control with a pass condition and a scope: zones, sites, device classes.', 'Agree the end state and who signs it off.'],
     proof: ['One requirement line per control, with its scope, its pass condition and the source it traces to.'],
@@ -137,44 +137,44 @@ const STEPS = [
     gate: null,
     ex: { tacacs: 'Every switch login is authenticated and authorized through ISE TACACS+, and a local login still works when ISE cannot be reached.',
           mab: 'Every access port admits only known devices; devices that cannot do 802.1X get in by MAC address through ISE.' } },
-  { name: 'Assess', sub: 'what is there, what is missing',
+  { name: 'Recon', sub: 'what is there, what is missing',
     why: 'Know every device and every gap before designing anything, without sending the network a single packet.',
     doing: ['Read ARP, MAC, interface and CDP/LLDP output offline to build the endpoint list per switch port.', 'Baseline every running-config and audit it against the hardening standard.', 'List the gaps per zone against the requirement.'],
     proof: ['Endpoints per port, with hidden switches and MACs that have no IP flagged.', 'Hardening gaps per device with severity, the evidence line and the exact fix.', 'A config baseline to measure every later change against.'],
     tools: [tool('ot-asset-inventory'), tool('ios-hardening-audit'), tool('cisco-config-drift')],
-    gate: { q: 'Are the assets and the gaps known?', short: 'Assets and gaps known?', yes: 'Go to step 3, Design.', no: 'Stay in step 2 and collect what is missing.', back: 1, label: 'keep assessing', decides: 'Every zone in scope has an endpoint list and a gap list.' },
+    gate: { q: 'Are the assets and the gaps known?', short: 'Assets and gaps known?', yes: 'Go to step 3, Plan.', no: 'Stay in step 2 and collect what is missing.', back: 1, label: 'keep assessing', decides: 'Every zone in scope has an endpoint list and a gap list.' },
     ex: { tacacs: 'Configs pulled from every switch; the hardening audit lists the AAA and management-plane gaps per device.',
           mab: 'The inventory builds the endpoint list per port from offline show output; unknown and IP-less MACs go to their owners to be named.' } },
-  { name: 'Design', sub: 'checked against real traffic',
+  { name: 'Plan', sub: 'checked against real traffic',
     why: 'Prove the design against traffic that is really on the wire before a single port changes.',
     doing: ['Draw zones and conduits: who must talk to whom, and over what.', 'Write the access policy: 802.1X where devices can, closed-mode MAB where they cannot, TrustSec groups and contracts.', 'Replay the design against observed flows and change it until no legitimate flow would be blocked.'],
     proof: ['The zone and conduit model.', 'Every flow the design would block, each one explained.', 'The rollout order, site by site.'],
     tools: [soon('ot-zone-conduit-check'), play('Closed-mode MAB, one site at a time', 'closed-mode-mab-site-rollout.md')],
-    gate: { q: 'Does the design hold against real traffic?', short: 'Holds on real traffic?', yes: 'Go to step 4, Prepare the change.', no: 'Redesign in step 3.', back: 2, label: 'redesign', decides: 'Replaying observed flows breaks nothing that is meant to work.' },
+    gate: { q: 'Does the design hold against real traffic?', short: 'Holds on real traffic?', yes: 'Go to step 4, Rehearse.', no: 'Redesign in step 3.', back: 2, label: 'redesign', decides: 'Replaying observed flows breaks nothing that is meant to work.' },
     ex: { tacacs: 'Device admin policy in ISE: who gets which command set, and the fallback order per platform.',
           mab: 'MAC lists and authorization profiles per device class, and the order of sites, checked against the flows seen on each site.' } },
-  { name: 'Prepare the change', sub: 'the way back is ready first',
+  { name: 'Rehearse', sub: 'the way back is ready first',
     why: 'Nothing goes into production until the rollback is written, the lockout risks are cleared and the platform is healthy.',
     doing: ['Write the procedure: pre-checks, the exact commands, the verification and the rollback.', 'Check the new configs for every way they could lock an engineer out.', 'Check ISE health and certificate expiry before the window.', 'Put the change into a script that stops on the first failed proof.'],
     proof: ['Pre-check output saved to the change record.', 'A clean lockout report and a clean health report.', 'The rollback, written and ready to run.'],
     tools: [tool('aaa-lockout-check'), tool('ise-health-audit'), play('Production change by script', 'gated-production-change.md'), play('The script contract', 'script-contract.md')],
-    gate: { q: 'Do the lockout and rollback checks pass?', short: 'Lockout and rollback clear?', yes: 'Go to step 5, Deliver.', no: 'Hold the change, fix it and check again in step 4.', back: 3, label: 'hold, fix, check again', decides: 'No lockout finding is open, health is clean and the rollback is in hand.' },
+    gate: { q: 'Do the lockout and rollback checks pass?', short: 'Lockout and rollback clear?', yes: 'Go to step 5, Execute.', no: 'Hold the change, fix it and check again in step 4.', back: 3, label: 'hold, fix, check again', decides: 'No lockout finding is open, health is clean and the rollback is in hand.' },
     ex: { tacacs: 'The lockout check clears every shape that locks you out: no working fallback, console authorization, undefined method lists, a dead source interface, a management VRF mismatch. ISE health is clean before the window.',
           mab: 'A procedure per site with its port list, the return to open mode as the rollback, and ISE health checked before the window.' } },
-  { name: 'Deliver', sub: 'one batch at a time, each proven',
+  { name: 'Execute', sub: 'one batch at a time, each proven',
     why: 'Change a small batch, prove it, and only then touch the next one.',
     doing: ['Run the change in the window, one batch at a time: a site, or a set of ports or switches.', 'After each batch, prove it: sessions authorize as designed, ports are healthy, nothing else changed.', 'A failed proof rolls that batch back; the next batch waits.'],
     proof: ['A before and after diff per device.', 'The verification lines in the change record.'],
     tools: [tool('ise-endpoint-explain'), tool('cisco-interface-health'), tool('cisco-config-drift')],
-    gate: { q: 'Did every proof pass?', short: 'Every proof passed?', yes: 'Go to step 6, Operate and defend.', no: 'Roll the batch back and return to step 4.', back: 3, label: 'roll back the batch', decides: 'Every batch has its verification lines, and none failed.' },
+    gate: { q: 'Did every proof pass?', short: 'Every proof passed?', yes: 'Go to step 6, Hold the ground.', no: 'Roll the batch back and return to step 4.', back: 3, label: 'roll back the batch', decides: 'Every batch has its verification lines, and none failed.' },
     ex: { tacacs: 'A batch of switches at a time; after each, a test login through ISE and a login on the local fallback are both proven before the next batch.',
           mab: 'One site at a time; the endpoint explainer shows why any device failed and where it landed, and the interface check confirms the ports.' } },
-  { name: 'Operate and defend', sub: 'keep it true after handover',
+  { name: 'Hold the ground', sub: 'keep it true after handover',
     why: 'The work stays true after handover, and anything that drifts or alarms becomes the next requirement.',
     doing: ['Check every device against the approved state and report anything changed outside change control.', 'Watch ISE health and certificate expiry.', 'Tune detection by classifying the hosts behind the alarms instead of switching rules off.'],
     proof: ['Drift reports, health reports and the alarm trend over time.'],
     tools: [tool('cisco-config-drift'), tool('ise-health-audit'), tool('ise-endpoint-explain'), soon('ndr-coverage-map'), play('NDR alarm noise reduction loop', 'ndr-alarm-noise-reduction-loop.md')],
-    gate: { q: 'Is there a finding from health, drift or detection?', short: 'Any finding?', yes: 'It becomes a new requirement: back to step 1.', no: 'In service. The checks keep running.', back: 0, label: 'new requirement, back to step 1', decides: 'The scheduled drift, health and detection checks.', invert: true },
+    gate: { q: 'Is there a finding from health, drift or detection?', short: 'Any finding?', yes: 'It becomes a new requirement: back to step 1.', no: 'Objective held. The checks keep running.', back: 0, label: 'new requirement, back to step 1', decides: 'The scheduled drift, health and detection checks.', invert: true },
     ex: { tacacs: 'The drift check keeps the AAA configuration at the approved state on every switch.',
           mab: 'New and moved devices show up on the next inventory run, and drift checks watch the port configurations.' } },
 ];
@@ -199,7 +199,7 @@ function drawMap() {
     drawMap.tight = tight;
     el('line', { x1: left, y1: y, x2: endX, y2: y, stroke: css('--route'), 'stroke-width': 10, 'stroke-linecap': 'round' }, svg);
     el('circle', { cx: endX, cy: y, r: 11, fill: css('--go') }, svg);
-    el('text', { x: endX + 12, y: y + fs + 26, 'text-anchor': 'end', 'font-size': fs + 2, fill: css('--go'), 'font-weight': 800 }, svg).textContent = 'In service';
+    el('text', { x: endX + 12, y: y + fs + 26, 'text-anchor': 'end', 'font-size': fs + 2, fill: css('--go'), 'font-weight': 800 }, svg).textContent = 'Objective held';
     let bottom = 0;
     STEPS.forEach((s, i) => {
       if (!s.gate) return;
@@ -223,7 +223,7 @@ function drawMap() {
     svg.setAttribute('viewBox', `0 0 ${w} ${top + n * gap + 30}`);
     el('line', { x1: x, y1: top, x2: x, y2: top + n * gap, stroke: css('--route'), 'stroke-width': 8, 'stroke-linecap': 'round' }, svg);
     el('circle', { cx: x, cy: top + n * gap, r: 9, fill: css('--go') }, svg);
-    el('text', { x: x + 40, y: top + n * gap + 6, 'font-size': fs + 1, fill: css('--go'), 'font-weight': 800 }, svg).textContent = 'In service';
+    el('text', { x: x + 40, y: top + n * gap + 6, 'font-size': fs + 1, fill: css('--go'), 'font-weight': 800 }, svg).textContent = 'Objective held';
     STEPS.forEach((s, i) => { if (s.gate) drawSignal(svg, x, pos[i].y + gap / 2 + 4, i, fs, true); });
   }
   const train = el('g', { id: 'train', 'aria-hidden': 'true' }, svg);
@@ -267,7 +267,7 @@ function renderPanel() {
       <div class="q">Gate: ${s.gate.q}</div>
       <div><span class="${s.gate.invert ? 'no' : 'yes'}">Yes:</span> ${s.gate.yes} &nbsp; <span class="${s.gate.invert ? 'yes' : 'no'}">No:</span> ${s.gate.no}</div>
       <div class="tag">Decided by: ${s.gate.decides}</div></div>`
-    : `<div class="gate"><div class="lamps" aria-hidden="true"><i style="background:var(--go)"></i><i style="background:var(--muted)"></i></div><div class="q">No gate here</div><div>The requirement goes straight into step 2, Assess.</div><div class="tag">Step 6 sends every new finding back to this step.</div></div>`;
+    : `<div class="gate"><div class="lamps" aria-hidden="true"><i style="background:var(--go)"></i><i style="background:var(--muted)"></i></div><div class="q">No gate here</div><div>The requirement goes straight into step 2, Recon.</div><div class="tag">Step 6 sends every new finding back to this step.</div></div>`;
   const exb = ex ? `<div class="example"><h3>On a real job: ${EX_NAME[ex]}</h3><p>${s.ex[ex]}</p></div>` : '';
   p.innerHTML = `<h2>Step ${cur + 1}: ${s.name}</h2><p class="why">${s.why}</p>
     <div class="cols">
